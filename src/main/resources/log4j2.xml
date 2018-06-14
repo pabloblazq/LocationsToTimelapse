@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+	<Appenders>
+		<Console name="console-appender" target="SYSTEM_OUT">
+			<PatternLayout pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n" />
+		</Console>
+		<RollingFile name="file-appender" fileName="log/locs_to_timelapse.log" filePattern="log/locs_to_timelapse_%d{yyyy-MM-dd}.log">
+			<PatternLayout pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n" />
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1"	modulate="true" />
+			</Policies>
+		</RollingFile>
+		
+		<!-- 
+		<File name="file-appender" fileName="log/gdax_api_client.log">
+			<PatternLayout>
+				<pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</pattern>
+			</PatternLayout>
+		</File>
+		-->
+	</Appenders>
+	<Loggers>
+		<Logger name="file-logger" level="info" additivity="false">
+			<AppenderRef ref="file-appender" level="info" />
+		</Logger>
+		<Root level="debug" additivity="false">
+			<AppenderRef ref="console-appender" />
+		</Root>
+	</Loggers>
+</Configuration>
