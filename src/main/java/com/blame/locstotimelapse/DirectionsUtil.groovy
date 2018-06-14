@@ -37,22 +37,24 @@ class DirectionsUtil {
 		def route = directions.routes[0];
 
 		// iterate over each leg
-		logger.info(directions["geocoded_waypoints"][0]["place_id"])
 		def output = [];
 		output.add(["origin" : origin]);
-		output["origin"].add(["place_id" : directions["geocoded_waypoints"][0]["place_id"]]) ;
+		output.origin.add(["place_id" : directions.geocoded_waypoints[0].place_id]) ;
 		output.add(["destination" : destination]);
-		output["destination"].add(["place_id" : directions["geocoded_waypoints"][1]["place_id"]]) ;
+		output.destination.add(["place_id" : directions.geocoded_waypoints[1].place_id]) ;
 		output.add(["steps" : []]);
 
-		//TODO: continue the transformation from here
-		for(int ileg = 0; ileg < route["legs"].length; ileg++) {
+		logger.info("number of legs " + route.legs.size())
+		for(def ileg = 0; ileg < route.legs.size(); ileg++) {
 			def leg = route.legs[ileg];
-
+			logger.info(leg)
+			
+			logger.info("number of steps " + leg.steps.size())
 			// iterate over each step
-			for(def istep = 0; istep < leg.steps.length; istep++) {
+			for(def istep = 0; istep < leg.steps.size(); istep++) {
 				def step = leg.steps[istep];
-
+				logger.info(step)
+				
 				// add it into a transformed more simple step object:
 				// {distance:... , start_location:{lat: ... , lng: ...}, end_location:{lat: ... , lng: ...}, instructions}
 				output.steps.add([
