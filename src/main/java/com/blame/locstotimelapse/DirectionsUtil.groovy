@@ -1,17 +1,18 @@
 package com.blame.locstotimelapse
 
 import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 
 import groovy.json.JsonSlurper
 
 class DirectionsUtil {
 	def private final logger
 	def jsonSlurper
+	def propManager
 
 	def DirectionsUtil() {
 		jsonSlurper = new JsonSlurper()
 		logger = LogManager.getLogger(DirectionsUtil.class)
+		propManager = new PropertyManager();
 	}
 	
 	def getRouteForLocations(origin, destination) {
@@ -23,7 +24,6 @@ class DirectionsUtil {
 		//def origin = {"lat" : splittedOrigin[0], "lng" : splittedOrigin[1]}
 		//def destination = {"lat" : splittedDestination[0], "lng" : splittedDestination[1]}
 
-		def propManager = new PropertyManager();
 		def directionsURL = directionsAPIprefix +
 				"origin=" + origin.lat + "," + origin.lng + "&" +
 				"destination=" + destination.lat + "," + destination.lng + "&" +
