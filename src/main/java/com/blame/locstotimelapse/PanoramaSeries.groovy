@@ -25,7 +25,8 @@ class PanoramaSeries {
 	def populateWithPanoramas(route) {
 	  // find the first step with no panoramas
 	  def istep = 0;
-	  for(; istep < route.steps.length; istep++)
+	  logger.info(route.steps.size())
+	  for(; istep < route.steps.size(); istep++)
 		if(route.steps[istep].panoramas == null)
 		  break;
 	

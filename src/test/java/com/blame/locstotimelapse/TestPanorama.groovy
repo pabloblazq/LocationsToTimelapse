@@ -19,7 +19,7 @@ class TestPanorama {
 
 	static void main(String[] args) {
 		//TestPanorama.testDirections();
-		TestPanorama.testStreetView();
+		TestPanorama.testPanorama();
 	}
 
 	static testMath() {
@@ -65,7 +65,7 @@ class TestPanorama {
 		 */
 	}
 
-	def testPanorama() {
+	static testPanorama() {
 		// casa, trabajo
 		//buildPanoramaSeries({"lat":"40.462004","lng":"-3.646267"}, {"lat":"40.393757","lng":"-3.675925"}, true);
 		// cruce arturo soria plaza, trabajo

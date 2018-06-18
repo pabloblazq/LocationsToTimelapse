@@ -38,11 +38,11 @@ class DirectionsUtil {
 
 		// iterate over each leg
 		def output = [];
-		output.add(["origin" : origin]);
+		output.add("origin" : origin);
 		output.origin.add(["place_id" : directions.geocoded_waypoints[0].place_id]) ;
-		output.add(["destination" : destination]);
+		output.add("destination" : destination);
 		output.destination.add(["place_id" : directions.geocoded_waypoints[1].place_id]) ;
-		output.add(["steps" : []]);
+		output.add("steps" : []);
 
 		logger.info("number of legs " + route.legs.size())
 		for(def ileg = 0; ileg < route.legs.size(); ileg++) {
