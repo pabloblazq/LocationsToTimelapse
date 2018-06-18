@@ -31,7 +31,7 @@ class PanoramaSeries {
 		  break;
 	
 	  // all the steps have panoramas, so return
-	  if(istep == route.steps.length)
+	  if(istep == route.steps.size())
 		return route;
 	  
 	  def awayFactor = 0.5;
@@ -57,60 +57,60 @@ class PanoramaSeries {
 	  logger.info("---------------------------------------------");
 	
 	  // get the fist panorama by a location, and store it
-	  def panoramaInfo = directionsUtil.getPanoramaForLocation(step.start_location);
-	  step.panoramas.push(panoramaInfo);
+	  def panoramaInfo = streetViewUtil.getPanoramaForLocation(step.start_location);
+	  step.panoramas.add(panoramaInfo);
 	  logger.info(panoramaInfo);
 		
 	  // get the last panoId of the previous step, to avoid revisit it
 	  def previousStepPanoId = null;
 	  if(istep > 0) {
 		def previousStepPanoramas = route.steps[istep - 1].panoramas;
-		previousStepPanoId = previousStepPanoramas[previousStepPanoramas.length - 1].panoId;
+		previousStepPanoId = previousStepPanoramas[previousStepPanoramas.size() - 1].panoId;
 		// if the last panoId of the previous step is the same than the first of this
 		// step, mark the penultimate of the previous step to avoid going through it
 		if(previousStepPanoId == panoramaInfo.panoId)
-		  previousStepPanoId = previousStepPanoramas[previousStepPanoramas.length - 2].panoId;
+		  previousStepPanoId = previousStepPanoramas[previousStepPanoramas.size() - 2].panoId;
 	  }
 	  step.forbiddenPanoramas = [];
-	  step.forbiddenPanoramas.push(previousStepPanoId);
+	  step.forbiddenPanoramas.add(previousStepPanoId);
 		
 	  // feed the forbidden panoramas with all the previous steps initial and end panoramas
 	  for(def jstep = 0; jstep < istep; jstep++) {
-		step.forbiddenPanoramas.push(route.steps[jstep].panoramas[0].panoId);
-		step.forbiddenPanoramas.push(route.steps[jstep].panoramas[route.steps[jstep].panoramas.length - 1].panoId);
+		step.forbiddenPanoramas.add(route.steps[jstep].panoramas[0].panoId);
+		step.forbiddenPanoramas.add(route.steps[jstep].panoramas[route.steps[jstep].panoramas.size() - 1].panoId);
 	  }
 		
 	  def minDistanceToStepEnd = MathUtil.getDistanceForLocations(panoramaInfo.location, step.end_location);
 	  // loop to discover the rest of panoramas until it reaches the step.end_location
 	  while(true) {
 		// get the direction to take the next panorama
-		def directionForNextPano = MathUtil.getDirectionForLocations(step.panoramas[step.panoramas.length -1].location, step.end_location);
+		def directionForNextPano = MathUtil.getDirectionForLocations(step.panoramas[step.panoramas.size() -1].location, step.end_location);
 		
-		if(step.panoramas.length >= 2) {
-		  previousStepPanoId = step.panoramas[step.panoramas.length -2].panoId
+		if(step.panoramas.size() >= 2) {
+		  previousStepPanoId = step.panoramas[step.panoramas.size() -2].panoId
 		}
 		
 		// get the next panorama by a direction
 		panoramaInfo =
 		  streetViewUtil.getNextPanorama(
-			step.panoramas[step.panoramas.length -1].panoId,
+			step.panoramas[step.panoramas.size() -1].panoId,
 			directionForNextPano,
 			previousStepPanoId,
 			step.forbiddenPanoramas
 		  );
-		step.panoramas.push(panoramaInfo);
+		step.panoramas.add(panoramaInfo);
 		logger.info(panoramaInfo);
 	
 		// check if it got lost
 		if(checkWrongWay(step, minDistanceToStepEnd, awayFactor)) {
 		  // all options consumed detection
-		  if(step.panoramas.length == 0) {
+		  if(step.panoramas.size() == 0) {
 			logger.info("All options consumed.");
 			// restore the panoramas if possible (if not it will be set to null)
 			step.panoramas = panoramasAux;
 			break;
 		  }
-		  minDistanceToStepEnd = MathUtil.getDistanceForLocations(step.panoramas[step.panoramas.length -1].location, step.end_location);
+		  minDistanceToStepEnd = MathUtil.getDistanceForLocations(step.panoramas[step.panoramas.size() -1].location, step.end_location);
 		  continue;
 		}
 	
@@ -118,20 +118,20 @@ class PanoramaSeries {
 		logger.info(distanceToStepEnd);
 		// condition to close the step panoramas: the iterations condition is to avoid infinite loop
 		// when the look for panoramas get lost
-		if(distanceToStepEnd < propManager.getScriptPropertyAsInt("END_STEP_CONDITION_DISTANCE") ||
-			step.panoramas.length >= propManager.getScriptPropertyAsInt("END_STEP_CONDITION_MAX_PANORAMAS")) {
+		if(distanceToStepEnd < propManager.getPropertyAsInt("panoramas.end_step_condition.distance") ||
+			step.panoramas.size() >= propManager.getPropertyAsInt("panoramas.end_step_condition.max_panoramas")) {
 		  logger.info("End condition reached. Checking detours...");
 		  // backup the panoramas
-		  panoramasAux = step.panoramas.slice(); //TODO: replace this method by a valid one
+		  panoramasAux = step.panoramas.take(step.panoramas.size());
 		  if(detectDetour(step)) {
 			// all options consumed detection
-			if(step.panoramas.length == 0) {
+			if(step.panoramas.size() == 0) {
 			  logger.info("All options consumed.");
 			  // restore the panoramas if possible (if not it will be set to null)
 			  step.panoramas = panoramasAux;
 			  break;
 			}
-			minDistanceToStepEnd = MathUtil.getDistanceForLocations(step.panoramas[step.panoramas.length -1].location, step.end_location);
+			minDistanceToStepEnd = MathUtil.getDistanceForLocations(step.panoramas[step.panoramas.size() -1].location, step.end_location);
 			continue;
 		  }
 		  else {
@@ -155,30 +155,30 @@ class PanoramaSeries {
 	def extractPanoramasFromRoute(route) {
 	  // move the panoramas of each step to a plain array of panoramas
 	  def panoramas = [];
-	  for(def istep = 0; istep < 4/*route.steps.length*/; istep++) {
+	  for(def istep = 0; istep < 4/*route.steps.size()*/; istep++) {
 		def step = route.steps[istep];
-		for(def ipano = 0; ipano < step.panoramas.length; ipano++) {
+		for(def ipano = 0; ipano < step.panoramas.size(); ipano++) {
 		  def panorama = step.panoramas[ipano];
 		  // check if it is already present
 		  def existsPanorama = false;
-		  for(def jpano = 0; jpano < panoramas.length; jpano++) {
+		  for(def jpano = 0; jpano < panoramas.size(); jpano++) {
 			if(panoramas[jpano].panoId == panorama.panoId) {
 			  existsPanorama = true;
 			}
 		  }
 		  if(!existsPanorama) {
-			panoramas.push(panorama)
+			panoramas.add(panorama)
 		  }
 		}
 	  }
 	  
 	  // override the panorama direction by setting it to the direction between that panorama an the one 3 places after
-	  for(def ipano = 0; ipano < panoramas.length -3; ipano++) {
+	  for(def ipano = 0; ipano < panoramas.size() -3; ipano++) {
 		panoramas[ipano].direction = MathUtil.getDirectionForLocations(panoramas[ipano].location, panoramas[ipano + 3].location);
 	  }
-	  panoramas[panoramas.length - 3].direction = MathUtil.getDirectionForLocations(panoramas[panoramas.length - 3].location, panoramas[panoramas.length - 1].location);
-	  panoramas[panoramas.length - 2].direction = MathUtil.getDirectionForLocations(panoramas[panoramas.length - 2].location, panoramas[panoramas.length - 1].location);
-	  panoramas[panoramas.length - 1].direction = panoramas[panoramas.length - 2].direction;
+	  panoramas[panoramas.size() - 3].direction = MathUtil.getDirectionForLocations(panoramas[panoramas.size() - 3].location, panoramas[panoramas.size() - 1].location);
+	  panoramas[panoramas.size() - 2].direction = MathUtil.getDirectionForLocations(panoramas[panoramas.size() - 2].location, panoramas[panoramas.size() - 1].location);
+	  panoramas[panoramas.size() - 1].direction = panoramas[panoramas.size() - 2].direction;
 	  
 	  return panoramas;
 	}
@@ -199,11 +199,12 @@ class PanoramaSeries {
 		return true;
 	  //else if(detectDetour(step))
 	  //  return true;
+	  return false;
 	}
 	
-	def detectDetour(step, completeDetection) {
+	def detectDetour(step) {
 	  def lastCrossIndex = null;
-	  for(def hpano = step.panoramas.length -1; hpano > 0; hpano-- ) {
+	  for(def hpano = step.panoramas.size() -1; hpano > 0; hpano-- ) {
 		// check if the last panorama came from a cross and get that cross
 		if(step.panoramas[hpano].comesFromCross) {
 		  lastCrossIndex = hpano -1;
@@ -224,19 +225,19 @@ class PanoramaSeries {
 			}
 			if(distanceTravelled > distanceStraight * 1.5) {
 			  logger.info("Detour detection. Going back to the initial cross of the detour...");
-			  def wrongWayIndex = step.wrongWayPanoramas.length;
+			  def wrongWayIndex = step.wrongWayPanoramas.size();
 			  step.wrongWayPanoramas[wrongWayIndex] = [];
 			  def panoramaRemoved = step.panoramas.pop();
-			  if(step.panoramas.length > crossIndex && step.panoramas.length < lastCrossIndex) {
-				step.wrongWayPanoramas[wrongWayIndex].push(panoramaRemoved);
+			  if(step.panoramas.size() > crossIndex && step.panoramas.size() < lastCrossIndex) {
+				step.wrongWayPanoramas[wrongWayIndex].add(panoramaRemoved);
 			  }
 			  while(true) {
 				panoramaRemoved = step.panoramas.pop();
-				if(step.panoramas.length > crossIndex && step.panoramas.length < lastCrossIndex) {
-				  step.wrongWayPanoramas[wrongWayIndex].push(panoramaRemoved)
+				if(step.panoramas.size() > crossIndex && step.panoramas.size() < lastCrossIndex) {
+				  step.wrongWayPanoramas[wrongWayIndex].add(panoramaRemoved)
 				}
-				if(step.panoramas.length - 1 == crossIndex) {
-				  step.forbiddenPanoramas.push(panoramaRemoved.panoId);
+				if(step.panoramas.size() - 1 == crossIndex) {
+				  step.forbiddenPanoramas.add(panoramaRemoved.panoId);
 				  logger.info(panoramaRemoved.panoId + " marked as forbidden.");
 				  logger.info("----------------------------------------------");
 				  return true;
@@ -251,17 +252,17 @@ class PanoramaSeries {
 	}
 	
 	def detectDeadRoad(step) {
-	  if(step.panoramas[step.panoramas.length - 1] == null) {
+	  if(step.panoramas[step.panoramas.size() - 1] == null) {
 		// we have a dead road: remove panoramas until the previous cross and mark the panorama taken from there as forbidden
 		logger.info("Dead road detection. Going back to the previous cross...");
-		def wrongWayIndex = step.wrongWayPanoramas.length;
+		def wrongWayIndex = step.wrongWayPanoramas.size();
 		step.wrongWayPanoramas[wrongWayIndex] = [];
 		step.panoramas.pop();
-		while(step.panoramas.length > 0) {
+		while(step.panoramas.size() > 0) {
 		  def panoramaRemoved = step.panoramas.pop();
-		  step.wrongWayPanoramas[wrongWayIndex].push(panoramaRemoved);
+		  step.wrongWayPanoramas[wrongWayIndex].add(panoramaRemoved);
 		  if(panoramaRemoved.comesFromCross) {
-			step.forbiddenPanoramas.push(panoramaRemoved.panoId);
+			step.forbiddenPanoramas.add(panoramaRemoved.panoId);
 			logger.info(panoramaRemoved.panoId + " marked as forbidden.");
 			logger.info("----------------------------------------------");
 			break;
@@ -275,17 +276,17 @@ class PanoramaSeries {
 	def detectMovingAwayOnWrongWay(step, minDistanceToStepEnd, awayFactor) {
 	  // it took a wrong direction in a previous cross when the distance
 	  // to the step end location has grown a 20% more than the initial distance
-	  def distanceToStepEnd = MathUtil.getDistanceForLocations(step.panoramas[step.panoramas.length - 1].location, step.end_location);
+	  def distanceToStepEnd = MathUtil.getDistanceForLocations(step.panoramas[step.panoramas.size() - 1].location, step.end_location);
 	  if(distanceToStepEnd > minDistanceToStepEnd * (1 + awayFactor)) {
 		// remove panoramas until the previous cross and mark the panorama taken from there as forbidden
 		logger.info("Wrong way detection. Going back to the previous cross...");
-		def wrongWayIndex = step.wrongWayPanoramas.length;
+		def wrongWayIndex = step.wrongWayPanoramas.size();
 		step.wrongWayPanoramas[wrongWayIndex] = [];
-		while(step.panoramas.length > 0) {
+		while(step.panoramas.size() > 0) {
 		  def panoramaRemoved = step.panoramas.pop();
-		  step.wrongWayPanoramas[wrongWayIndex].push(panoramaRemoved);
+		  step.wrongWayPanoramas[wrongWayIndex].add(panoramaRemoved);
 		  if(panoramaRemoved.comesFromCross) {
-			step.forbiddenPanoramas.push(panoramaRemoved.panoId);
+			step.forbiddenPanoramas.add(panoramaRemoved.panoId);
 			logger.info(panoramaRemoved.panoId + " marked as forbidden.");
 			logger.info("----------------------------------------------");
 			break;
@@ -297,15 +298,15 @@ class PanoramaSeries {
 	}
 	
 	def detectLoop(step) {
-	  for(def i = 0; i < step.panoramas.length -1; i++) {
-		if(step.panoramas[i].panoId == step.panoramas[step.panoramas.length -1].panoId) {
+	  for(def i = 0; i < step.panoramas.size() -1; i++) {
+		if(step.panoramas[i].panoId == step.panoramas[step.panoramas.size() -1].panoId) {
 		  // we have a loop: we will remove the last panorama and mark it as forbidden
 		  logger.info("Loop detection. Cutting the way to avoid completing the loop...");
 		  def panoramaRemoved = step.panoramas.pop();
-		  def wrongWayIndex = step.wrongWayPanoramas.length;
+		  def wrongWayIndex = step.wrongWayPanoramas.size();
 		  step.wrongWayPanoramas[wrongWayIndex] = [];
-		  step.wrongWayPanoramas[wrongWayIndex].push(panoramaRemoved);
-		  step.forbiddenPanoramas.push(panoramaRemoved.panoId);
+		  step.wrongWayPanoramas[wrongWayIndex].add(panoramaRemoved);
+		  step.forbiddenPanoramas.add(panoramaRemoved.panoId);
 		  logger.info(panoramaRemoved.panoId + " marked as forbidden.");
 		  logger.info("----------------------------------------------");
 		  return true;

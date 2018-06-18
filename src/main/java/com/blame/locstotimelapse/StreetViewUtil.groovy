@@ -8,10 +8,12 @@ class StreetViewUtil {
 
 	def private final logger
 	def jsonSlurper
-
+	def propManager
+	
 	def StreetViewUtil() {
 		jsonSlurper = new JsonSlurper()
 		logger = LogManager.getLogger(StreetViewUtil.class)
+		propManager = new PropertyManager()
 	}
 
 	def getNextPanorama(panoramaId, direction, previousPanoramaId, forbiddenPanoramas) {
@@ -20,9 +22,9 @@ class StreetViewUtil {
 		def minAngleLinkIndex = null;
 		def minAngleDiff = 180;
 		def numberOfAllowedLinks = 0;
-		for(def ilink = 0; ilink < panoramaMetadata.Links.length; ilink++) {
+		for(def ilink = 0; ilink < panoramaMetadata.Links.size(); ilink++) {
 		  def linkDirection = Float.parseFloat(panoramaMetadata.Links[ilink].yawDeg);
-		  def angleDiff = angleDifference(direction, linkDirection); //TODO: correct this call
+		  def angleDiff = MathUtil.angleDifference(direction, linkDirection); //TODO: correct this call
 		  def linkPanoramaId = panoramaMetadata.Links[ilink].panoId;
 		  if(linkPanoramaId != previousPanoramaId && forbiddenPanoramas.indexOf(linkPanoramaId) == -1) {
 			numberOfAllowedLinks++;
@@ -47,7 +49,7 @@ class StreetViewUtil {
 		return [
 		  "panoId" : panoramaMetadata.Links[minAngleLinkIndex].panoId,
 		  "direction" : panoramaMetadata.Links[minAngleLinkIndex].yawDeg,
-		  "distance" : getDistanceForLocations(panoramaMetadata.Location, nextPanoramaMetadata.Location),
+		  "distance" : MathUtil.getDistanceForLocations(panoramaMetadata.Location, nextPanoramaMetadata.Location),
 		  "location" : [
 			"lat" : nextPanoramaMetadata.Location.lat,
 			"lng" : nextPanoramaMetadata.Location.lng
