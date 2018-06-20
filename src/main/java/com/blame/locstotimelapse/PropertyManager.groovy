@@ -4,8 +4,8 @@ import java.util.Properties
 
 class PropertyManager {
 
-	static final PROPERTIES_FILENAME = "locs_to_timelapse.properties"
-	static final SENSIBLE_PROPERTIES_FILENAME = "locs_to_timelapse.sensible.properties"
+	static final PROPERTIES_FILENAME = "panoramas/locs_to_timelapse.properties"
+	static final SENSIBLE_PROPERTIES_FILENAME = "panoramas/locs_to_timelapse.sensible.properties"
 	
 	Properties properties = null
 	

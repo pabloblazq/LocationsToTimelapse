@@ -1,0 +1,1 @@
+action.getRouteForLocations=com.blame.locstotimelapse.httpserver.handlers.GetRouteForLocationsHandler
