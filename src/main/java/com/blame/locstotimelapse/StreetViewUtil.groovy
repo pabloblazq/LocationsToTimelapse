@@ -9,15 +9,20 @@ class StreetViewUtil {
 	def private final logger
 	def jsonSlurper
 	def propManager
+	def panoramaMetadataCache
 	
 	def StreetViewUtil() {
 		jsonSlurper = new JsonSlurper()
 		logger = LogManager.getLogger(StreetViewUtil.class)
 		propManager = new PropertyManager()
+		panoramaMetadataCache = [:]
 	}
 
 	def getNextPanorama(panoramaId, direction, previousPanoramaId, forbiddenPanoramas) {
-		def panoramaMetadata = getMetadataForPanoramaId(panoramaId);
+		def panoramaMetadata = panoramaMetadataCache.remove(panoramaId)
+		if(panoramaMetadata == null) {
+			panoramaMetadata = getMetadataForPanoramaId(panoramaId);
+		}
 		
 		def minAngleLinkIndex = null;
 		def minAngleDiff = 180;
@@ -45,6 +50,7 @@ class StreetViewUtil {
 		}
 		
 		def nextPanoramaMetadata = getMetadataForPanoramaId(panoramaMetadata.Links[minAngleLinkIndex].panoId);
+		panoramaMetadataCache[nextPanoramaMetadata.Location.panoId] = nextPanoramaMetadata
 		
 		return [
 		  "panoId" : panoramaMetadata.Links[minAngleLinkIndex].panoId,
@@ -61,8 +67,7 @@ class StreetViewUtil {
 	  
 	  def getMetadataForPanoramaId(panoramaId) {
 		def cbkAPIURL = "http://maps.google.com/cbk?output=json&panoid=" + panoramaId + "&cb_client=api&pm=0&ph=0&v=2";
-		def responseText = new URL(cbkAPIURL).getText()
-		return jsonSlurper.parseText(responseText)
+		return jsonSlurper.parseText(new URL(cbkAPIURL).getText())
 	  }
 	  
 	  def getPanoramaForLocation(location) {
