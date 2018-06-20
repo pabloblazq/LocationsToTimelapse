@@ -77,8 +77,10 @@ class TestPanorama {
 		def ps = new PanoramaSeries();
 		def logger = LogManager.getLogger(TestPanorama.class)
 
-		def route = du.getRouteForLocations(["lat":"40.462004","lng":"-3.646267"], ["lat":"40.393757","lng":"-3.675925"]);
-		route = ps.populateWithPanoramas(route);
+		def route = du.getRouteForLocations(["lat":"40.462004","lng":"-3.646267"], ["lat":"40.393757","lng":"-3.675925"])
+		for(def i = 0; i < route.steps.size(); i++) {
+			route = ps.populateWithPanoramas(route)
+		}
 
 		//40.452167, -3.681109
 		//40.443993, -3.685777
